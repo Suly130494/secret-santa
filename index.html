@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Secret Santa magique</title>
+  <meta name="description" content="Une enveloppe scellée, une énigme, une pioche magique : découvre à qui tu offres ton cadeau.">
+  <meta name="theme-color" content="#0b1026">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@1,500&family=Outfit:wght@400;600&display=swap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/player.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage" aria-hidden="true"></div>
+  <main id="app"></main>
+
+  <template id="tpl-landing">
+    <section class="center-screen">
+      <p class="eyebrow">✦ Secret Santa ✦</p>
+      <h1 class="title">La magie attend son lien</h1>
+      <p class="prose">Pour découvrir ton enveloppe, ouvre le lien secret que l'organisateur t'a envoyé. 🎅</p>
+      <a class="quiet-link" href="#admin">Je suis l'organisateur →</a>
+    </section>
+  </template>
+
+  <template id="tpl-broken">
+    <section class="center-screen">
+      <p class="eyebrow">✦ Oups ✦</p>
+      <h1 class="title">Ce lien semble abîmé…</h1>
+      <p class="prose">Il a sans doute été coupé en route. Redemande ton lien secret à l'organisateur, en entier cette fois. 🧩</p>
+    </section>
+  </template>
+
+  <template id="tpl-admin">
+    <div class="admin">
+      <div class="banner banner-warn" data-slot="local-banner" role="alert" hidden>
+        <strong>Attention :</strong> ces liens pointent vers ton ordinateur. Génère-les depuis le site en ligne pour que la famille puisse les ouvrir.
+      </div>
+
+      <header class="admin-head">
+        <p class="eyebrow">✦ Secret Santa ✦</p>
+        <h1 class="title">Le grimoire de l'organisateur</h1>
+        <p class="prose">Ici, tu prépares le jeu. Personne, pas même toi, ne verra qui a tiré qui.</p>
+      </header>
+
+      <section class="panel" aria-labelledby="h-people">
+        <h2 class="panel-title" id="h-people"><span class="step">1</span> Les participants et leurs envies</h2>
+        <p class="hint">Trois idées ou thèmes de cadeau par personne. Seuls ceux qui résolvent l'énigme les découvriront, une fois leur cible connue.</p>
+        <div class="people" data-slot="participants"></div>
+        <button class="btn btn-ghost" type="button" id="add-participant">＋ Ajouter un participant</button>
+      </section>
+
+      <section class="panel" aria-labelledby="h-excl">
+        <h2 class="panel-title" id="h-excl"><span class="step">2</span> Les exclusions <span class="optional">facultatif</span></h2>
+        <div class="exclusions" data-slot="exclusions"></div>
+        <button class="btn btn-ghost" type="button" id="add-exclusion">＋ Ajouter une exclusion</button>
+      </section>
+
+      <section class="panel" aria-labelledby="h-riddle">
+        <h2 class="panel-title" id="h-riddle"><span class="step">3</span> L'énigme</h2>
+        <p class="hint">Chaque case se gratte pour révéler son texte. Ensemble, elles mènent au mot magique.</p>
+        <div class="clues">
+          <label class="field-label" for="clue-0">Case 1</label>
+          <textarea class="field" id="clue-0" data-clue="0" rows="2" placeholder="Premier indice…"></textarea>
+          <label class="field-label" for="clue-1">Case 2</label>
+          <textarea class="field" id="clue-1" data-clue="1" rows="2" placeholder="Deuxième indice…"></textarea>
+          <label class="field-label" for="clue-2">Case 3</label>
+          <textarea class="field" id="clue-2" data-clue="2" rows="2" placeholder="Troisième indice…"></textarea>
+        </div>
+        <label class="field-label" for="magic-word">Mot magique (la réponse)</label>
+        <input class="field" id="magic-word" type="text" autocomplete="off" spellcheck="false" placeholder="ex. Flocon d'hiver">
+        <p class="hint" data-slot="magic-preview">Majuscules, accents, espaces et ponctuation ne comptent pas.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-reward">
+        <h2 class="panel-title" id="h-reward"><span class="step">4</span> La récompense du premier</h2>
+        <label class="field-label sr-only" for="reward">Récompense</label>
+        <input class="field" id="reward" type="text" autocomplete="off" placeholder="Dispensé de vaisselle au réveillon">
+        <p class="hint">Elle s'affiche dans l'enveloppe, et dans le message de victoire.</p>
+      </section>
+
+      <section class="panel panel-cast" aria-labelledby="h-cast">
+        <h2 class="panel-title" id="h-cast"><span class="step">5</span> Le tirage</h2>
+        <button class="btn btn-gold btn-xl" type="button" id="generate"><span data-slot="generate-label">✦ Lancer le tirage secret</span></button>
+        <p class="msg msg-error" data-slot="gen-error" role="alert"></p>
+        <p class="msg msg-warn" data-slot="gen-warning" aria-live="polite"></p>
+      </section>
+
+      <section class="panel panel-results" data-slot="results-panel" aria-labelledby="h-results" hidden>
+        <h2 class="panel-title" id="h-results">✨ Les liens sont prêts</h2>
+        <p class="hint" data-slot="results-meta"></p>
+        <p class="msg msg-warn" data-slot="regen-note" hidden>Nouveaux liens : n'envoie que cette série, les anciens correspondent à un autre tirage.</p>
+        <div class="links" data-slot="results"></div>
+        <p class="hint">Les codes de secours sont pour toi seul : donne-le à quelqu'un qui bloque. Il ouvrira son enveloppe, mais sans les idées de cadeau.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-seal">
+        <h2 class="panel-title" id="h-seal">🔍 Vérifier un sceau</h2>
+        <p class="hint">Quelqu'un annonce sa victoire ? Vérifie le sceau de son message (avec le mot magique ci-dessus).</p>
+        <div class="seal-check">
+          <label class="sr-only" for="seal-name">Participant</label>
+          <select class="field" id="seal-name"></select>
+          <label class="sr-only" for="seal-code">Sceau</label>
+          <input class="field seal-code" id="seal-code" type="text" maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="7F3K">
+          <button class="btn btn-ghost" type="button" id="seal-check">Vérifier</button>
+        </div>
+        <p class="msg" data-slot="seal-result" aria-live="polite"></p>
+      </section>
+
+      <footer class="admin-foot">
+        <button class="quiet-link" type="button" id="reset-form">Réinitialiser le formulaire</button>
+      </footer>
+    </div>
+  </template>
+
+  <template id="tpl-player">
+    <div class="player">
+      <button class="sound-toggle" type="button" data-ref="sound" aria-pressed="false" aria-label="Couper le son">
+        <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.6 6a8.6 8.6 0 0 1 0 12"/></svg>
+        <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16.5 9.5l5 5M21.5 9.5l-5 5"/></svg>
+      </button>
+
+      <section class="screen screen-intro" data-screen="intro" hidden>
+        <p class="intro-line">
+          <span class="intro-name" data-ref="intro-name"></span>
+          <span class="intro-text">une enveloppe scellée t'attend…</span>
+        </p>
+        <p class="intro-skip">Touche l'écran pour passer</p>
+      </section>
+
+      <section class="screen screen-sealed" data-screen="sealed" hidden>
+        <header class="screen-head">
+          <p class="eyebrow">✦ Secret Santa ✦</p>
+          <h1 class="title title-sm">L'enveloppe de <span data-ref="sealed-name"></span></h1>
+        </header>
+        <div class="envelope-anchor" data-ref="envelope-anchor" aria-hidden="true"></div>
+        <p class="prose prose-sm">Gratte les trois cases : l'énigme mène au mot magique qui brise le sceau.</p>
+        <div class="scratch-row" data-ref="cards"></div>
+        <p class="reward-line" data-ref="reward-line" hidden>🏆 Le premier à trouver gagne : <strong data-ref="reward-text"></strong></p>
+        <form class="spell" data-ref="spell-form" autocomplete="off" novalidate>
+          <label for="spell-input" class="sr-only">Mot magique</label>
+          <input id="spell-input" class="field spell-input" data-ref="spell-input" type="text" placeholder="Mot magique…" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+          <button class="btn btn-gold" type="submit" data-ref="spell-btn">Briser le sceau</button>
+        </form>
+        <p class="spell-msg" data-ref="spell-msg" aria-live="polite"></p>
+      </section>
+
+      <section class="screen screen-victory" data-screen="victory" hidden>
+        <p class="eyebrow">✦ Victoire ✦</p>
+        <h1 class="title">Le sceau est brisé !</h1>
+        <p class="prose">Tu as trouvé le mot magique <span data-ref="found-at"></span>.</p>
+        <p class="reward-line" data-ref="victory-reward" hidden>Annonce-le vite dans le groupe : le premier gagne <strong data-ref="victory-reward-text"></strong>.</p>
+        <div class="share-box" data-ref="victory-share"></div>
+        <button class="btn btn-gold btn-xl" type="button" data-ref="open-envelope">Ouvrir l'enveloppe →</button>
+      </section>
+
+      <section class="screen screen-ready" data-screen="ready" hidden>
+        <p class="eyebrow">✦ Le moment est venu ✦</p>
+        <h1 class="title">Qui vas-tu gâter ?</h1>
+        <p class="prose">Les cartes n'attendent plus que toi.</p>
+        <button class="btn btn-gold btn-xl btn-draw" type="button" data-ref="draw">✨ Lancer la pioche</button>
+      </section>
+
+      <section class="screen screen-result" data-screen="result" hidden>
+        <div class="card-anchor" data-ref="card-anchor" aria-hidden="true"></div>
+        <div class="result-copy">
+          <p class="result-lead">Tu es le Secret Santa de…</p>
+          <h1 class="result-name" data-ref="result-name"></h1>
+          <div class="ideas" data-ref="ideas" hidden>
+            <p class="ideas-title">Ses envies</p>
+            <ul class="ideas-list" data-ref="ideas-list"></ul>
+          </div>
+          <div class="ideas-locked" data-ref="ideas-locked" hidden>
+            <p><span aria-hidden="true">🔒</span> Les envies de ta cible étaient réservées à ceux qui ont percé l'énigme 😉</p>
+            <form class="spell spell-sm" data-ref="late-form" autocomplete="off" novalidate>
+              <label for="late-input" class="sr-only">Mot magique</label>
+              <input id="late-input" class="field" data-ref="late-input" type="text" placeholder="Tu as trouvé ? Mot magique…" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+              <button class="btn btn-ghost" type="submit">Débloquer</button>
+            </form>
+            <p class="spell-msg" data-ref="late-msg" aria-live="polite"></p>
+          </div>
+          <p class="hush">Chut, c'est un secret 🤫</p>
+          <div class="result-actions">
+            <button class="btn btn-ghost" type="button" data-ref="replay">Revoir la pioche</button>
+            <button class="btn btn-gold" type="button" data-ref="share-again" hidden>Partager ma victoire</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="sheet" data-ref="sheet" hidden>
+        <div class="sheet-backdrop" data-ref="sheet-close"></div>
+        <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+          <h2 class="sheet-title" id="sheet-title">Annonce ta victoire</h2>
+          <div class="share-box" data-ref="sheet-share"></div>
+          <button class="quiet-link" type="button" data-ref="sheet-dismiss">Fermer</button>
+        </div>
+      </div>
+
+      <div class="clue-zoom" data-ref="clue-zoom" hidden>
+        <div class="clue-zoom-card"><p data-ref="clue-zoom-text"></p></div>
+        <p class="clue-zoom-hint">Touche pour fermer</p>
+      </div>
+
+      <div class="toast" data-ref="toast" role="status" aria-live="polite"></div>
+    </div>
+  </template>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
