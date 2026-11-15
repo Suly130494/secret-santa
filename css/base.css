@@ -231,6 +231,25 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 .msg-warn { color: var(--gold-light); }
 .msg-ok { color: var(--ok); }
 
+/* Message pendant le chargement (remplacé dès que l'app démarre) */
+.boot-msg {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--gutter);
+  text-align: center;
+  font-family: var(--font-prose);
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--gold-light);
+  animation: boot-in 0.8s ease 0.4s both, boot-pulse 2.4s ease-in-out 1.2s infinite;
+}
+
+@keyframes boot-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes boot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
 /* Écrans centrés (accueil, lien abîmé) */
 .center-screen {
   min-height: 100dvh;

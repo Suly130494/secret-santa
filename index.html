@@ -25,14 +25,16 @@
 </head>
 <body>
   <div id="stage" aria-hidden="true"></div>
-  <main id="app"></main>
+  <main id="app">
+    <p class="boot-msg" role="status">✦ La magie se prépare… ✦</p>
+    <noscript><p class="boot-msg">Active JavaScript pour ouvrir ton enveloppe magique.</p></noscript>
+  </main>
 
   <template id="tpl-landing">
     <section class="center-screen">
       <p class="eyebrow">✦ Secret Santa ✦</p>
       <h1 class="title">La magie attend son lien</h1>
       <p class="prose">Pour découvrir ton enveloppe, ouvre le lien secret que l'organisateur t'a envoyé. 🎅</p>
-      <a class="quiet-link" href="#admin">Je suis l'organisateur →</a>
     </section>
   </template>
 
@@ -81,7 +83,10 @@
           <textarea class="field" id="clue-2" data-clue="2" rows="2" placeholder="Troisième indice…"></textarea>
         </div>
         <label class="field-label" for="magic-word">Mot magique (la réponse)</label>
-        <input class="field" id="magic-word" type="text" autocomplete="off" spellcheck="false" placeholder="ex. Flocon d'hiver">
+        <div class="secret-field">
+          <input class="field" id="magic-word" type="password" autocomplete="new-password" spellcheck="false" placeholder="ex. Flocon d'hiver">
+          <button class="btn btn-ghost btn-small" type="button" id="toggle-word" aria-pressed="false" aria-controls="magic-word">Afficher</button>
+        </div>
         <p class="hint" data-slot="magic-preview">Majuscules, accents, espaces et ponctuation ne comptent pas.</p>
       </section>
 
@@ -105,6 +110,11 @@
         <p class="msg msg-warn" data-slot="regen-note" hidden>Nouveaux liens : n'envoie que cette série, les anciens correspondent à un autre tirage.</p>
         <div class="links" data-slot="results"></div>
         <p class="hint">Les codes de secours sont pour toi seul : donne-le à quelqu'un qui bloque. Il ouvrira son enveloppe, mais sans les idées de cadeau.</p>
+        <div class="results-tools">
+          <button class="btn btn-ghost btn-small" type="button" id="copy-codes">Copier tous les codes de secours</button>
+          <button class="btn btn-ghost btn-small btn-danger" type="button" id="clear-links">Effacer liens et codes de ce navigateur</button>
+        </div>
+        <p class="hint">Une fois les liens envoyés, efface-les d'ici : quelqu'un qui utiliserait ce navigateur pourrait sinon ouvrir toutes les enveloppes.</p>
       </section>
 
       <section class="panel" aria-labelledby="h-seal">

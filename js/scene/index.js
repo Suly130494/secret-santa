@@ -1,4 +1,8 @@
 import { createFallbackScene } from './fallback2d.js';
+import { withTimeout } from '../core/timeout.js';
+
+/** Au-delà, on n'attend plus three.js (réseau lent) : on passe en 2D. */
+const LOAD_TIMEOUT_MS = 8000;
 
 /**
  * @typedef {'whoosh'|'shimmer'|'crack'|'flip'|'error'} Cue
@@ -32,7 +36,10 @@ export async function createScene(layer, opts) {
   const params = new URLSearchParams(location.search);
   if (!params.has('no3d') && webglAvailable()) {
     try {
-      const [{ createWebGLScene }, { detectQuality }] = await Promise.all([import('./webgl-scene.js'), import('./quality.js')]);
+      const [{ createWebGLScene }, { detectQuality }] = await withTimeout(
+        Promise.all([import('./webgl-scene.js'), import('./quality.js')]),
+        LOAD_TIMEOUT_MS,
+      );
       return await createWebGLScene(layer, { ...opts, quality: detectQuality() });
     } catch (err) {
       console.warn('3D indisponible, passage en 2D :', err);

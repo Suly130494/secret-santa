@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { createGlow } from './particles.js';
+import { withTimeout } from '../core/timeout.js';
 
 const CW = 1.1;
 const CH = 1.6;
@@ -161,7 +162,7 @@ function cardGeometry() {
  * Pioche : les cartes surgissent, tourbillonnent, se mélangent, puis la carte tirée se retourne.
  */
 export async function createCards(stage, dust, { onCue } = {}) {
-  try { await document.fonts.load("600 80px 'Cinzel'"); } catch { /* police de repli */ }
+  try { await withTimeout(document.fonts.load("600 80px 'Cinzel'"), 3000); } catch { /* police de repli */ }
   const geo = cardGeometry();
   const back = backTexture();
   back.anisotropy = stage.renderer.capabilities.getMaxAnisotropy();

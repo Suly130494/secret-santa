@@ -5,6 +5,7 @@ import { whatsappUrl, formatFoundAt } from '../core/share.js';
 import { ADMIN_DRAFT_KEY, ADMIN_LINKS_KEY } from '../core/storage.js';
 import { h, delay, debounce, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
+import { rescueCodesText } from './codes.js';
 
 const DEFAULT_NAMES = ['Marie', 'Sulyvan', 'Papa', 'Maman', 'Boune'];
 
@@ -255,6 +256,35 @@ export function startAdmin({ root, store, baseUrl }) {
       generateBtn.classList.remove('is-casting');
       label.textContent = '✦ Lancer le tirage secret';
     }
+  });
+
+  // ---- Discrétion : mot magique masqué, liens effaçables -------------------------
+  const toggleWord = $('#toggle-word');
+  toggleWord.addEventListener('click', () => {
+    const input = $('#magic-word');
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    toggleWord.textContent = show ? 'Masquer' : 'Afficher';
+    toggleWord.setAttribute('aria-pressed', String(show));
+  });
+
+  $('#copy-codes').addEventListener('click', async (e) => {
+    const record = store.get(ADMIN_LINKS_KEY);
+    if (!record?.links?.length) return;
+    const ok = await copyText(rescueCodesText(record.links));
+    e.target.textContent = ok ? 'Codes copiés ✓ (garde-les dans tes notes)' : 'Copie impossible';
+    setTimeout(() => { e.target.textContent = 'Copier tous les codes de secours'; }, 2400);
+  });
+
+  $('#clear-links').addEventListener('click', () => {
+    if (!window.confirm('Effacer les liens, les codes de secours et le mot magique de ce navigateur ? Pense à copier les codes de secours avant.')) return;
+    store.remove(ADMIN_LINKS_KEY);
+    state.magicWord = '';
+    saveNow();
+    $('#magic-word').value = '';
+    renderMagicPreview();
+    slot('results').replaceChildren();
+    slot('results-panel').hidden = true;
   });
 
   // ---- Ajouts / réinitialisation ----------------------------------------------

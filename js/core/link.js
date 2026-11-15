@@ -37,9 +37,19 @@ export function encodeHash(payload) {
 const isStr = (v) => typeof v === 'string';
 const isVault = (v) => v && typeof v === 'object' && isStr(v.s) && isStr(v.i) && isStr(v.c);
 
+/**
+ * Nettoie un « # » : retire le « # » et tout ce qui suit la partie base64url
+ * (point, parenthèse, espace encodé… collés par une appli de messagerie).
+ */
+export function cleanHash(hash) {
+  const raw = String(hash ?? '').replace(/^#/, '').trim();
+  if (!raw.startsWith(LINK_PREFIX)) return raw;
+  return LINK_PREFIX + raw.slice(LINK_PREFIX.length).match(/^[A-Za-z0-9_-]*/)[0];
+}
+
 /** @param {string} hash @returns {Payload} */
 export function decodeHash(hash) {
-  const raw = String(hash ?? '').replace(/^#/, '');
+  const raw = cleanHash(hash);
   if (!raw.startsWith(LINK_PREFIX)) throw new InvalidLinkError('Préfixe inconnu');
   let p;
   try {

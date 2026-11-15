@@ -4,6 +4,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { gsap } from 'gsap';
+import { createLoop } from './loop.js';
 
 const BLOOM = { strength: 0.8, radius: 0.5, threshold: 0.85 };
 const CAMERA_Z = 8;
@@ -62,7 +63,6 @@ export function createStage(layer, { quality: initialQuality = 'high' } = {}) {
   const clock = new THREE.Clock();
   let elapsed = 0;
   let frameTimes = [];
-  let running = true;
 
   function setQuality(next) {
     if (next === quality) return;
@@ -72,8 +72,6 @@ export function createStage(layer, { quality: initialQuality = 'high' } = {}) {
   }
 
   function frame() {
-    if (!running) return;
-    requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05);
     elapsed += dt;
     camera.position.x += (target.x * 0.12 - camera.position.x) * 0.04;
@@ -92,17 +90,18 @@ export function createStage(layer, { quality: initialQuality = 'high' } = {}) {
     }
   }
 
+  // Une seule boucle, même après plusieurs allers-retours vers une autre appli.
+  const loop = createLoop(frame);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
-      running = false;
-    } else if (!running) {
-      running = true;
+      loop.stop();
+    } else if (!loop.running) {
       clock.getDelta();
       frameTimes = [];
-      requestAnimationFrame(frame);
+      loop.start();
     }
   });
-  requestAnimationFrame(frame);
+  loop.start();
 
   /** Demi-hauteur visible (en unités monde) à la profondeur z. */
   const halfHeightAt = (z = 0) => Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * (CAMERA_Z - z);

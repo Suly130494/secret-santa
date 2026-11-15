@@ -5,6 +5,7 @@ import { formatFoundAt, buildShareMessage, whatsappUrl } from '../core/share.js'
 import { h, delay, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
 import { createScratchCard } from './scratch.js';
+import { sanitizeProgress, resumeScreen } from './flow.js';
 
 export const WRONG_WORD_MESSAGES = [
   'Hmm… le sceau ne reconnaît pas cette formule. 🤔',
@@ -15,16 +16,6 @@ export const WRONG_WORD_MESSAGES = [
   'Pas encore ! Relis bien les trois cases. 🔍',
   'Brrr… mauvaise formule, le grimoire reste fermé. 📕',
 ];
-
-function sanitizeProgress(raw) {
-  const p = raw && typeof raw === 'object' ? raw : {};
-  return {
-    revealed: Array.isArray(p.revealed) ? p.revealed.filter((i) => Number.isInteger(i) && i >= 0 && i < 3) : [],
-    secret: typeof p.secret === 'string' ? p.secret : undefined,
-    mode: p.mode === 'magic' || p.mode === 'rescue' ? p.mode : undefined,
-    foundAt: typeof p.foundAt === 'string' ? p.foundAt : null,
-  };
-}
 
 /**
  * Le parcours d'un participant : intro → enveloppe scellée → victoire → pioche → résultat.
@@ -68,7 +59,10 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
   };
   soundBtn.addEventListener('click', () => { sound.toggle(); syncSound(); });
   syncSound();
-  window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
+  // iOS n'accepte de lancer l'audio qu'à la fin d'un geste (touchend / click), pas au pointerdown.
+  ['pointerup', 'touchend', 'click', 'keydown'].forEach((type) => {
+    window.addEventListener(type, () => sound.unlock(), { capture: true, passive: true });
+  });
 
   // ---- Partage de victoire --------------------------------------------------
   async function getShareText() {
@@ -187,8 +181,12 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
         secret: value,
         mode: result.mode,
         foundAt: result.mode === 'magic' ? now().toISOString() : null,
+        drawn: false,
       };
       saveProgress();
+      // Le clavier se referme : on recentre l'enveloppe pour que la casse du sceau se voie en entier.
+      ref('envelope-anchor').scrollIntoView({ block: 'center', behavior: 'smooth' });
+      await delay(350);
       player.classList.add('is-breaking');
       await scene.breakSeal();
       player.classList.remove('is-breaking');
@@ -221,6 +219,8 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     hideResultDetails();
     scene.resetDraw();
     await scene.runDraw({ names: others, target: unlocked.target, anchor: ref('card-anchor') });
+    progress.drawn = true;
+    saveProgress();
     player.classList.remove('is-drawing');
     revealResult(false);
   }
@@ -287,11 +287,14 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
   if (progress.secret) {
     unlocked = await unlockPayload(payload, progress.secret);
     if (!unlocked) {
-      progress = { revealed: progress.revealed, foundAt: null };
+      progress = sanitizeProgress({ revealed: progress.revealed });
       saveProgress();
     }
   }
   await playIntro(Boolean(unlocked));
-  if (unlocked) showResult();
+  const screen = resumeScreen(progress, unlocked);
+  if (screen === 'result') showResult();
+  else if (screen === 'victory') showVictory();
+  else if (screen === 'ready') showReady();
   else showSealed();
 }

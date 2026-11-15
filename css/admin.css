@@ -187,3 +187,11 @@
 .seal-code { text-transform: uppercase; letter-spacing: 0.2em; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
 .admin-foot { display: flex; justify-content: center; padding-top: 4px; }
+
+.secret-field { display: flex; gap: 8px; align-items: center; }
+.secret-field .field { flex: 1 1 auto; min-width: 0; }
+.secret-field .btn { flex: none; }
+
+.results-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.results-tools .btn { flex: 1 1 220px; }
+.btn-danger { border-color: rgba(255, 138, 152, 0.45); color: #ffd6dc; }

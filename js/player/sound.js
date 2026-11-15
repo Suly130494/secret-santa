@@ -33,7 +33,8 @@ export function createSound(store) {
     return ctx;
   }
 
-  const ready = () => !muted && ensure() && ctx.state === 'running';
+  // Le contexte n'est créé que par unlock() (geste de l'utilisateur), jamais par un son.
+  const ready = () => !muted && ctx !== null && ctx.state === 'running';
 
   function noise(loop = false) {
     const src = ctx.createBufferSource();
