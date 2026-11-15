@@ -61,9 +61,9 @@ export function drawAssignments(names, exclusions = [], rng = cryptoRandom) {
   return out;
 }
 
-/** Code de secours personnel, ex. « NOEL-K7QM ». */
+/** Code de secours personnel, ex. « NOEL-K7QM2X » (6 caractères : ~30 bits, trop long à deviner). */
 export function makeRescueCode(rng = cryptoRandom) {
   let code = 'NOEL-';
-  for (let k = 0; k < 4; k++) code += SAFE_ALPHABET[Math.floor(rng() * SAFE_ALPHABET.length)];
+  for (let k = 0; k < 6; k++) code += SAFE_ALPHABET[Math.floor(rng() * SAFE_ALPHABET.length)];
   return code;
 }

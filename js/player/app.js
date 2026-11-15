@@ -112,7 +112,9 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     const skipped = new Promise((resolve) => { skip = resolve; });
     const onTap = () => { scene.skipIntro(); skip(); };
     screen.addEventListener('pointerdown', onTap);
-    await Promise.race([Promise.all([scene.playIntro({ giver: payload.g, short }), delay(short ? 1300 : 4300)]), skipped]);
+    // Filet de sécurité : l'intro ne peut jamais bloquer, même si l'animation est ralentie.
+    const safety = delay(short ? 3000 : 7000).then(() => scene.skipIntro());
+    await Promise.race([Promise.all([scene.playIntro({ giver: payload.g, short }), delay(short ? 1300 : 4300)]), skipped, safety]);
     screen.removeEventListener('pointerdown', onTap);
   }
 

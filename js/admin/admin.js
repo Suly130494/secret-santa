@@ -131,7 +131,8 @@ export function startAdmin({ root, store, baseUrl }) {
     if (!clean) {
       box.replaceChildren('Majuscules, accents, espaces et ponctuation ne comptent pas.');
     } else {
-      box.replaceChildren('Ce qui compte : ', h('span', { class: 'preview-word' }, clean));
+      box.replaceChildren('Ce qui compte : ', h('span', { class: 'preview-word' }, clean),
+        clean.length < 6 ? ' — astuce : un mot plus long (6 lettres ou plus, ou deux mots) résiste mieux aux petits malins.' : '');
     }
   }
 
@@ -178,12 +179,13 @@ export function startAdmin({ root, store, baseUrl }) {
     const when = record.generatedAt ? formatFoundAt(new Date(record.generatedAt)) : '';
     slot('results-meta').textContent = `${record.links.length} liens, tirage effectué ${when}. Envoie à chacun le sien.`;
     slot('results').replaceChildren(...record.links.map((link) => {
-      const codeEl = h('code', {}, 'NOEL-••••');
+      const masked = 'NOEL-••••••';
+      const codeEl = h('code', {}, masked);
       const toggle = h('button', {
         class: 'quiet-link', type: 'button', 'aria-label': `Afficher le code de secours de ${link.name}`,
         onclick: () => {
           const shown = codeEl.textContent === link.rescueCode;
-          codeEl.textContent = shown ? 'NOEL-••••' : link.rescueCode;
+          codeEl.textContent = shown ? masked : link.rescueCode;
           toggle.textContent = shown ? 'Afficher' : 'Masquer';
         },
       }, 'Afficher');
