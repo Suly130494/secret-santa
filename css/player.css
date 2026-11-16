@@ -1,13 +1,13 @@
 /* ---------- Lecteur : structure ---------- */
 .player {
   min-height: 100dvh;
-  padding: max(16px, env(safe-area-inset-top)) var(--gutter) max(24px, env(safe-area-inset-bottom));
+  padding: max(48px, calc(env(safe-area-inset-top) + 40px)) var(--gutter) max(24px, env(safe-area-inset-bottom));
 }
 
 .screen {
   max-width: 520px;
   margin: 0 auto;
-  min-height: calc(100dvh - 40px);
+  min-height: calc(100dvh - 72px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -232,7 +232,7 @@
 .screen-result { justify-content: flex-start; padding-top: 22px; }
 
 .card-anchor {
-  width: min(46vw, 210px);
+  width: min(46vw, 200px, 21vh);
   aspect-ratio: 1.1 / 1.6;
   flex: none;
 }
@@ -299,6 +299,66 @@
 .spell-sm .field { font-size: 1rem; }
 
 .hush { font-size: 0.95rem; color: var(--text-faint); }
+
+/* ---------- Compte à rebours du réveillon ---------- */
+.countdown, .christmas-now {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  padding: 16px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(196, 30, 58, 0.16), rgba(31, 157, 85, 0.12));
+  animation: screen-in 0.7s var(--ease-out) both;
+}
+
+.countdown-title { font-family: var(--font-display); color: var(--gold-light); letter-spacing: 0.05em; }
+
+.countdown-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; max-width: 360px; }
+
+.cd-unit {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 4px 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #8a1429, #4a0816);
+  box-shadow: inset 0 0 0 1px rgba(245, 200, 106, 0.35), 0 8px 18px -10px rgba(0, 0, 0, 0.8);
+}
+
+.cd-unit:nth-child(even) { background: linear-gradient(180deg, #17733f, #0b4024); }
+
+.cd-num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.4rem, 7vw, 2rem);
+  line-height: 1;
+  color: #fff3d0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px rgba(255, 217, 138, 0.45);
+}
+
+.cd-num.is-ticking { animation: cd-tick 0.45s var(--ease-out); }
+
+@keyframes cd-tick { from { transform: translateY(-35%); opacity: 0.15; } to { transform: none; opacity: 1; } }
+
+.cd-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255, 243, 208, 0.75); }
+
+.countdown-note { font-size: 0.82rem; color: var(--text-faint); }
+
+.christmas-now { border-color: var(--line-strong); background: linear-gradient(180deg, rgba(196, 30, 58, 0.26), rgba(31, 157, 85, 0.2)); }
+
+.christmas-title { font-family: var(--font-display); font-size: 1.7rem; color: var(--gold-light); }
+
+/* ---------- Touches de Noël ---------- */
+.reward-line { border-color: rgba(212, 42, 58, 0.5); background: rgba(212, 42, 58, 0.1); }
+.idea { border-left: 3px solid #d42a3a; }
+.idea:nth-child(even) { border-left-color: #1f9d55; }
+.fb-holly { transition: opacity 0.5s ease; }
+.fb-envelope.is-open .fb-holly { opacity: 0; }
+.fb-ornament { font-size: 3.2rem; text-shadow: 0 0 18px rgba(245, 200, 106, 0.55); }
 
 .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
 .result-actions .btn { flex: 1 1 160px; }

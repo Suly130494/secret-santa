@@ -6,6 +6,7 @@ import { ADMIN_DRAFT_KEY, ADMIN_LINKS_KEY } from '../core/storage.js';
 import { h, delay, debounce, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
 import { rescueCodesText } from './codes.js';
+import { shortenUrl } from './shorten.js';
 
 const DEFAULT_NAMES = ['Marie', 'Sulyvan', 'Papa', 'Maman', 'Boune'];
 
@@ -179,6 +180,8 @@ export function startAdmin({ root, store, baseUrl }) {
     slot('regen-note').hidden = !regenerated;
     const when = record.generatedAt ? formatFoundAt(new Date(record.generatedAt)) : '';
     slot('results-meta').textContent = `${record.links.length} liens, tirage effectué ${when}. Envoie à chacun le sien.`;
+    syncShortenButton(record);
+    if (regenerated) slot('shorten-msg').textContent = '';
     slot('results').replaceChildren(...record.links.map((link) => {
       const masked = 'NOEL-••••••';
       const codeEl = h('code', {}, masked);
@@ -190,17 +193,20 @@ export function startAdmin({ root, store, baseUrl }) {
           toggle.textContent = shown ? 'Afficher' : 'Masquer';
         },
       }, 'Afficher');
+      const shareUrl = link.shortUrl ?? link.url;
       const copyBtn = h('button', {
         class: 'btn btn-small', type: 'button',
         onclick: async () => {
-          const ok = await copyText(link.url);
+          const ok = await copyText(shareUrl);
           copyBtn.textContent = ok ? 'Copié ✓' : 'Copie impossible';
           setTimeout(() => { copyBtn.textContent = 'Copier le lien'; }, 1600);
         },
       }, 'Copier le lien');
-      const message = `🎅 Coucou ${link.name} ! Voici ton lien secret pour le Secret Santa : ${link.url}`;
-      let shortUrl = link.url;
-      try { const u = new URL(link.url); shortUrl = `${u.host}${u.pathname}#…`; } catch { /* lien local */ }
+      const message = `🎅 Coucou ${link.name} ! Voici ton lien secret pour le Secret Santa : ${shareUrl}`;
+      let shortUrl = link.shortUrl ? link.shortUrl.replace('https://', '') : link.url;
+      if (!link.shortUrl) {
+        try { const u = new URL(link.url); shortUrl = `${u.host}${u.pathname}#…`; } catch { /* lien local */ }
+      }
       return h('article', { class: 'link-card' },
         h('div', { class: 'link-head' },
           h('span', { class: 'link-name' }, link.name),
@@ -255,6 +261,43 @@ export function startAdmin({ root, store, baseUrl }) {
       generateBtn.disabled = false;
       generateBtn.classList.remove('is-casting');
       label.textContent = '✦ Lancer le tirage secret';
+    }
+  });
+
+  // ---- Liens courts (is.gd) ----------------------------------------------------------
+  const shortenBtn = $('#shorten-links');
+  function syncShortenButton(record) {
+    const all = record?.links?.length && record.links.every((l) => l.shortUrl);
+    shortenBtn.disabled = Boolean(all);
+    shortenBtn.textContent = all ? '✓ Liens raccourcis' : '✂️ Raccourcir les liens';
+  }
+  shortenBtn.addEventListener('click', async () => {
+    const record = store.get(ADMIN_LINKS_KEY);
+    if (!record?.links?.length) return;
+    const msg = slot('shorten-msg');
+    msg.className = 'msg';
+    msg.textContent = '';
+    shortenBtn.disabled = true;
+    const failed = [];
+    const todo = record.links.filter((l) => !l.shortUrl);
+    for (const [k, link] of todo.entries()) {
+      shortenBtn.textContent = `Raccourcissement… ${k + 1}/${todo.length}`;
+      try {
+        link.shortUrl = await shortenUrl(link.url);
+      } catch {
+        failed.push(link.name);
+      }
+    }
+    store.set(ADMIN_LINKS_KEY, record);
+    renderResults(record);
+    if (failed.length) {
+      msg.className = 'msg msg-warn';
+      msg.textContent = `Impossible de raccourcir le lien de ${failed.join(', ')} pour l'instant : réessaie dans un moment (le lien long reste utilisable).`;
+      shortenBtn.disabled = false;
+      shortenBtn.textContent = '✂️ Réessayer';
+    } else {
+      msg.className = 'msg msg-ok';
+      msg.textContent = 'Liens raccourcis ✓ La copie et WhatsApp utilisent maintenant les liens courts.';
     }
   });
 

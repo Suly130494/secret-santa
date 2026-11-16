@@ -8,7 +8,7 @@ const CH = 1.6;
 const TEX_W = 512;
 const TEX_H = 744;
 const CONFETTI = 150;
-const CONFETTI_COLORS = [0xffd98a, 0xf5c86a, 0xd8263f, 0x2fbf71, 0xffffff, 0x7b5cff];
+const CONFETTI_COLORS = [0xffd98a, 0xd8263f, 0x1f9d55, 0xffffff, 0xf5c86a, 0xc41e3a, 0x2fbf71];
 
 function canvasTexture(draw) {
   const canvas = document.createElement('canvas');
@@ -77,19 +77,106 @@ function backTexture() {
     halo.addColorStop(1, 'rgba(255, 217, 138, 0)');
     ctx.fillStyle = halo;
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = gold;
-    star(ctx, w / 2, h / 2, w * 0.22, w * 0.07, 8);
-    ctx.fill();
-    star(ctx, w / 2, h / 2, w * 0.1, w * 0.035, 4);
-    ctx.fillStyle = '#fff6dc';
-    ctx.fill();
-    // petites étoiles de coin
-    [[90, 90], [w - 90, 90], [90, h - 90], [w - 90, h - 90]].forEach(([x, y]) => {
-      ctx.fillStyle = gold;
-      star(ctx, x, y, 18, 6, 4);
-      ctx.fill();
-    });
+    drawTree(ctx, w / 2, h * 0.5, w * 0.62, gold);
+    // houx dans les coins
+    drawHolly(ctx, 96, 96, 0.8, -Math.PI / 4);
+    drawHolly(ctx, w - 96, 96, 0.8, Math.PI / 4);
+    drawHolly(ctx, 96, h - 96, 0.8, -Math.PI * 0.75);
+    drawHolly(ctx, w - 96, h - 96, 0.8, Math.PI * 0.75);
   });
+}
+
+/** Sapin doré : trois étages, guirlandes, boules, étoile. */
+function drawTree(ctx, cx, cy, S, gold) {
+  ctx.save();
+  ctx.fillStyle = '#9c6b22';
+  ctx.fillRect(cx - S * 0.05, cy + S * 0.24, S * 0.1, S * 0.12);
+  const tiers = [[0.36, -0.12, 0.26], [0.28, -0.28, 0.07], [0.2, -0.42, -0.1]];
+  tiers.forEach(([half, top, bottom]) => {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + top * S);
+    ctx.quadraticCurveTo(cx + half * S * 0.55, cy + (top + bottom) * 0.5 * S, cx + half * S, cy + bottom * S);
+    ctx.quadraticCurveTo(cx, cy + (bottom + 0.05) * S, cx - half * S, cy + bottom * S);
+    ctx.quadraticCurveTo(cx - half * S * 0.55, cy + (top + bottom) * 0.5 * S, cx, cy + top * S);
+    ctx.closePath();
+    ctx.fillStyle = gold;
+    ctx.shadowColor = 'rgba(40, 0, 10, 0.5)';
+    ctx.shadowBlur = 10;
+    ctx.fill();
+  });
+  ctx.shadowBlur = 0;
+  // guirlandes
+  ctx.strokeStyle = 'rgba(255, 250, 230, 0.85)';
+  ctx.lineWidth = 2.5;
+  [[-0.16, 0.0, 0.14, -0.06], [-0.24, 0.18, 0.22, 0.1], [-0.1, -0.2, 0.1, -0.26]].forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath();
+    ctx.moveTo(cx + x1 * S, cy + y1 * S);
+    ctx.quadraticCurveTo(cx, cy + (y1 + y2) * 0.5 * S + S * 0.05, cx + x2 * S, cy + y2 * S);
+    ctx.stroke();
+  });
+  // boules
+  [[-0.12, 0.04, '#d42a3a'], [0.1, -0.02, '#1f9d55'], [-0.2, 0.2, '#fff3d6'], [0.18, 0.16, '#d42a3a'],
+    [0.02, 0.2, '#1f9d55'], [-0.04, -0.16, '#d42a3a'], [0.07, -0.3, '#fff3d6']].forEach(([x, y, c]) => {
+    ctx.beginPath();
+    ctx.arc(cx + x * S, cy + y * S, S * 0.028, 0, Math.PI * 2);
+    ctx.fillStyle = c;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + x * S - S * 0.008, cy + y * S - S * 0.008, S * 0.009, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.fill();
+  });
+  // étoile au sommet
+  star(ctx, cx, cy - 0.45 * S, S * 0.075, S * 0.032, 5);
+  ctx.fillStyle = '#fff3c4';
+  ctx.shadowColor = 'rgba(255, 220, 140, 0.9)';
+  ctx.shadowBlur = 18;
+  ctx.fill();
+  ctx.restore();
+}
+
+function hollyLeaf(ctx, len, wd) {
+  const n = 4;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  for (let k = 1; k <= n; k++) {
+    const x = (k / n) * len;
+    ctx.quadraticCurveTo(x - len / n / 2, -wd * 0.45, x, k === n ? 0 : -wd * (k % 2 ? 1 : 0.7));
+  }
+  for (let k = n - 1; k >= 0; k--) {
+    const x = (k / n) * len;
+    ctx.quadraticCurveTo(x + len / n / 2, wd * 0.45, x, k === 0 ? 0 : wd * (k % 2 ? 1 : 0.7));
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(len * 0.92, 0);
+  ctx.stroke();
+}
+
+/** Brin de houx : deux feuilles et trois baies. */
+function drawHolly(ctx, x, y, s, rot) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rot);
+  ctx.scale(s, s);
+  ctx.fillStyle = '#1f7a43';
+  ctx.strokeStyle = '#0f4a27';
+  ctx.lineWidth = 2;
+  ctx.save(); ctx.rotate(-0.55); hollyLeaf(ctx, 70, 22); ctx.restore();
+  ctx.save(); ctx.rotate(Math.PI + 0.55); hollyLeaf(ctx, 70, 22); ctx.restore();
+  [[0, -6], [-9, 6], [9, 6]].forEach(([bx, by]) => {
+    ctx.beginPath();
+    ctx.arc(bx, by, 9, 0, Math.PI * 2);
+    ctx.fillStyle = '#d42a3a';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(bx - 3, by - 3, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.fill();
+  });
+  ctx.restore();
 }
 
 function frontTexture(name) {
@@ -113,9 +200,7 @@ function frontTexture(name) {
     ctx.lineWidth = 2;
     roundRectPath(ctx, 40, 40, w - 80, h - 80, 16);
     ctx.stroke();
-    ctx.fillStyle = gold;
-    star(ctx, w / 2, h * 0.3, 34, 11, 8);
-    ctx.fill();
+    drawHolly(ctx, w / 2, h * 0.3, 1, 0);
     // prénom
     const text = name ?? '';
     let size = 96;
@@ -389,6 +474,14 @@ export async function createCards(stage, dust, { onCue } = {}) {
       c.group.rotation.set(0, Math.PI, 0);
       gsap.from(c.group.scale, { x: 0.001, y: 0.001, z: 0.001, duration: 0.9, ease: 'back.out(1.6)' });
       dust.burst(pos, { count: 200, speed: 2.2, life: 1.4 });
+    },
+
+    /** Fête du minuit du réveillon : confettis et gerbe d'or sur la carte. */
+    celebrate() {
+      const p = landed ? landed.group.getWorldPosition(tmp).clone() : new THREE.Vector3(0, 0.3, 0);
+      burstConfetti(p);
+      dust.burst(p, { count: 500, speed: 4, life: 1.8, size: 3.5 });
+      stage.bloomPulse(1.6, 1.0);
     },
 
     reset() {

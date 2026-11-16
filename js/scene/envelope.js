@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { createGlow } from './particles.js';
+import { createHolly } from './christmas.js';
 
 const W = 3.2;
 const H = 2.1;
@@ -216,6 +217,13 @@ export function createEnvelope(stage, dust, { onCue, reducedMotion = false } = {
   seal.rotation.x = Math.PI / 2;
   seal.position.set(0, sealY, FRONT + 0.05);
   shake.add(seal);
+
+  // Brin de houx glissé sous le sceau
+  const holly = createHolly(materials);
+  holly.position.set(0, sealY - SEAL_R * 0.8, FRONT + 0.03);
+  holly.rotation.z = Math.PI;
+  holly.scale.setScalar(1.15);
+  shake.add(holly);
 
   const halves = [0, Math.PI].map((start) => {
     const g = new THREE.CylinderGeometry(SEAL_R, SEAL_R * 1.04, 0.09, 32, 1, false, start, Math.PI);

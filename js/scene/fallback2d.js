@@ -18,6 +18,11 @@ const ENVELOPE_SVG = `
   <rect x="12" y="12" width="296" height="186" rx="8" fill="none" stroke="#d9b56a" stroke-opacity=".45" stroke-width="1"/>
   <path d="M8 202 L160 112 L312 202" fill="none" stroke="#a07832" stroke-opacity=".3" stroke-width="1.5"/>
   <g class="fb-flap"><path d="M6 8 L160 122 L314 8 Z" fill="url(#fb-flap)" stroke="#d9b56a" stroke-width="2" stroke-linejoin="round"/></g>
+  <g class="fb-holly">
+    <path d="M160 150 q-24 4 -44 22 q8 -2 12 4 q4 -8 10 -6 q2 -8 10 -8 q0 -8 12 -12 z" fill="#1f7a43" stroke="#145a30" stroke-width="1.5"/>
+    <path d="M160 150 q24 4 44 22 q-8 -2 -12 4 q-4 -8 -10 -6 q-2 -8 -10 -8 q0 -8 -12 -12 z" fill="#23864a" stroke="#145a30" stroke-width="1.5"/>
+    <circle cx="160" cy="154" r="5.5" fill="#d42a3a"/><circle cx="152" cy="159" r="5" fill="#c41e3a"/><circle cx="168" cy="159" r="5" fill="#d42a3a"/>
+  </g>
   <g class="fb-seal">
     <path class="fb-seal-l" d="M160 92 a30 30 0 0 0 0 60 l-3 -10 l4 -8 l-5 -9 l4 -9 l-4 -12 z" fill="url(#fb-wax)"/>
     <path class="fb-seal-r" d="M160 92 a30 30 0 0 1 0 60 l-3 -10 l4 -8 l-5 -9 l4 -9 l-4 -12 z" fill="url(#fb-wax)"/>
@@ -46,7 +51,7 @@ export function createFallbackScene(layer, { reducedMotion = false, onCue } = {}
 
   function confetti(anchor) {
     if (reducedMotion) return;
-    const colors = ['#ffd98a', '#f5c86a', '#d8263f', '#2fbf71', '#ffffff', '#7b5cff'];
+    const colors = ['#ffd98a', '#d8263f', '#1f9d55', '#ffffff', '#f5c86a', '#c41e3a'];
     const box = h('div', { class: 'fb-confetti' }, Array.from({ length: 44 }, (_, i) => h('span', {
       style: `--x:${(Math.random() - 0.5) * 320}px;--y:${-120 - Math.random() * 160}px;--r:${Math.random() * 720}deg;background:${colors[i % colors.length]};animation-delay:${Math.random() * 0.15}s`,
     })));
@@ -57,7 +62,7 @@ export function createFallbackScene(layer, { reducedMotion = false, onCue } = {}
   function card(name, flipped = false) {
     return h('div', { class: `fb-card${flipped ? ' is-flipped' : ''}` },
       h('div', { class: 'fb-card-inner' },
-        h('div', { class: 'fb-face fb-back' }, h('span', { class: 'fb-ornament' }, '✦')),
+        h('div', { class: 'fb-face fb-back' }, h('span', { class: 'fb-ornament' }, '🎄')),
         h('div', { class: 'fb-face fb-front' }, h('span', { class: 'fb-star' }, '✦'), h('span', { class: 'fb-name' }, name ?? '')),
       ),
     );
@@ -135,6 +140,10 @@ export function createFallbackScene(layer, { reducedMotion = false, onCue } = {}
     resetDraw() {
       deck?.remove();
       deck = null;
+    },
+
+    celebrate() {
+      confetti(deck?.parentElement ?? layer);
     },
   };
 }

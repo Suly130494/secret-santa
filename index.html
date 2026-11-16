@@ -108,6 +108,11 @@
         <h2 class="panel-title" id="h-results">✨ Les liens sont prêts</h2>
         <p class="hint" data-slot="results-meta"></p>
         <p class="msg msg-warn" data-slot="regen-note" hidden>Nouveaux liens : n'envoie que cette série, les anciens correspondent à un autre tirage.</p>
+        <div class="shorten-box">
+          <button class="btn btn-gold" type="button" id="shorten-links">✂️ Raccourcir les liens</button>
+          <p class="hint">Les liens passent par is.gd et deviennent minuscules (ex. <code>is.gd/Xk3pQa</code>). is.gd voit les prénoms et les indices ; la cible et les idées restent chiffrées.</p>
+          <p class="msg" data-slot="shorten-msg" aria-live="polite"></p>
+        </div>
         <div class="links" data-slot="results"></div>
         <p class="hint">Les codes de secours sont pour toi seul : donne-le à quelqu'un qui bloque. Il ouvrira son enveloppe, mais sans les idées de cadeau.</p>
         <div class="results-tools">
@@ -153,7 +158,7 @@
 
       <section class="screen screen-sealed" data-screen="sealed" hidden>
         <header class="screen-head">
-          <p class="eyebrow">✦ Secret Santa ✦</p>
+          <p class="eyebrow">🎄 Secret Santa 🎄</p>
           <h1 class="title title-sm">L'enveloppe de <span data-ref="sealed-name"></span></h1>
         </header>
         <div class="envelope-anchor" data-ref="envelope-anchor" aria-hidden="true"></div>
@@ -178,7 +183,7 @@
       </section>
 
       <section class="screen screen-ready" data-screen="ready" hidden>
-        <p class="eyebrow">✦ Le moment est venu ✦</p>
+        <p class="eyebrow">🎅 Le moment est venu 🎅</p>
         <h1 class="title">Qui vas-tu gâter ?</h1>
         <p class="prose">Les cartes n'attendent plus que toi.</p>
         <button class="btn btn-gold btn-xl btn-draw" type="button" data-ref="draw">✨ Lancer la pioche</button>
@@ -202,6 +207,20 @@
             </form>
             <p class="spell-msg" data-ref="late-msg" aria-live="polite"></p>
           </div>
+          <section class="countdown" data-ref="countdown" hidden>
+            <p class="countdown-title">🎄 Rendez-vous au réveillon</p>
+            <div class="countdown-grid" role="timer" aria-label="Temps restant avant le réveillon">
+              <div class="cd-unit"><span class="cd-num" data-ref="cd-days">0</span><span class="cd-label" data-ref="cd-days-label">jours</span></div>
+              <div class="cd-unit"><span class="cd-num" data-ref="cd-hours">00</span><span class="cd-label">heures</span></div>
+              <div class="cd-unit"><span class="cd-num" data-ref="cd-minutes">00</span><span class="cd-label">min</span></div>
+              <div class="cd-unit"><span class="cd-num" data-ref="cd-seconds">00</span><span class="cd-label">sec</span></div>
+            </div>
+            <p class="countdown-note">Minuit, dans la nuit du 24 au 25 décembre</p>
+          </section>
+          <section class="christmas-now" data-ref="christmas-now" hidden>
+            <p class="christmas-title">🎅 Joyeux Noël !</p>
+            <p class="prose">C'est l'heure d'ouvrir les cadeaux 🎁</p>
+          </section>
           <p class="hush">Chut, c'est un secret 🤫</p>
           <div class="result-actions">
             <button class="btn btn-ghost" type="button" data-ref="replay">Revoir la pioche</button>

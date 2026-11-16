@@ -6,6 +6,7 @@ import { createSnow, createGoldDust } from './particles.js';
 import { createIntro } from './intro.js';
 import { createEnvelope } from './envelope.js';
 import { createCards } from './cards.js';
+import { createMoon, createSleigh } from './christmas.js';
 
 /**
  * Scène 3D (three.js) : même interface que la scène de secours 2D.
@@ -28,7 +29,9 @@ export async function createWebGLScene(layer, { reducedMotion = false, onCue, qu
   const sky = createSky(stage);
   const snow = createSnow(stage);
   const dust = createGoldDust(stage);
-  const intro = createIntro(stage, { sky, snow, dust }, { onCue });
+  const moon = createMoon(stage);
+  const sleigh = reducedMotion ? null : createSleigh(stage, dust);
+  const intro = createIntro(stage, { sky, snow, dust, moon, sleigh }, { onCue });
   const envelope = createEnvelope(stage, dust, { onCue, reducedMotion });
   const cards = await createCards(stage, dust, { onCue });
   document.body.classList.add('has-webgl');
@@ -45,5 +48,6 @@ export async function createWebGLScene(layer, { reducedMotion = false, onCue, qu
     runDraw: ({ names, target, anchor }) => cards.run({ names, target, anchor, reducedMotion }),
     showResultIdle: (target, anchor) => cards.showIdle(target, anchor),
     resetDraw: () => cards.reset(),
+    celebrate: () => cards.celebrate(),
   };
 }

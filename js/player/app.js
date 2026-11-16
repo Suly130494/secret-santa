@@ -6,6 +6,7 @@ import { h, delay, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
 import { createScratchCard } from './scratch.js';
 import { sanitizeProgress, resumeScreen } from './flow.js';
+import { christmasCountdown } from '../core/countdown.js';
 
 export const WRONG_WORD_MESSAGES = [
   'Hmm… le sceau ne reconnaît pas cette formule. 🤔',
@@ -225,12 +226,64 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     revealResult(false);
   }
 
+  // ---- Compte à rebours du réveillon ----------------------------------------------
+  let countdownTimer = null;
+  let lastPhase = null;
+  const pad = (n) => String(n).padStart(2, '0');
+
+  function tickCountdown() {
+    const c = christmasCountdown(now());
+    if (c.phase === 'christmas') {
+      ref('countdown').hidden = true;
+      ref('christmas-now').hidden = false;
+      if (lastPhase === 'before') {
+        scene.celebrate();
+        sound.cue('jingle');
+      }
+    } else {
+      ref('countdown').hidden = false;
+      ref('christmas-now').hidden = true;
+      const set = (name, value) => {
+        const el = ref(name);
+        if (el.textContent !== value) {
+          el.textContent = value;
+          el.classList.remove('is-ticking');
+          void el.offsetWidth;
+          el.classList.add('is-ticking');
+        }
+      };
+      set('cd-days', String(c.days));
+      ref('cd-days-label').textContent = c.days > 1 ? 'jours' : 'jour';
+      set('cd-hours', pad(c.hours));
+      set('cd-minutes', pad(c.minutes));
+      set('cd-seconds', pad(c.seconds));
+    }
+    lastPhase = c.phase;
+  }
+
+  function startCountdown() {
+    stopCountdown();
+    lastPhase = null;
+    tickCountdown();
+    countdownTimer = setInterval(tickCountdown, 1000);
+    sound.startAmbient();
+  }
+
+  function stopCountdown() {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+    ref('countdown').hidden = true;
+    ref('christmas-now').hidden = true;
+    sound.stopAmbient();
+  }
+
   // ---- Résultat -------------------------------------------------------------------
   function hideResultDetails() {
     ref('ideas').hidden = true;
     ref('ideas-locked').hidden = true;
     ref('share-again').hidden = true;
     ref('result-name').classList.remove('is-revealed');
+    stopCountdown();
   }
 
   function renderIdeas() {
@@ -250,6 +303,8 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     if (!immediate) await delay(1200);
     if (unlocked.mode === 'magic') renderIdeas();
     else ref('ideas-locked').hidden = false;
+    if (!immediate) await delay(600);
+    startCountdown();
   }
 
   function showResult() {
