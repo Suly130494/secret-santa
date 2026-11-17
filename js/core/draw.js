@@ -21,7 +21,8 @@ function shuffled(list, rng) {
 }
 
 /**
- * Tire au sort qui offre à qui : personne ne se tire soi-même, chacun reçoit une fois.
+ * Tire au sort qui offre à qui : personne ne se tire soi-même, chacun reçoit une fois,
+ * et jamais de duo mutuel (si A offre à B, B n'offre pas à A).
  * @param {string[]} names
  * @param {[string, string][]} exclusions paires [donneur, receveur] interdites
  * @param {() => number} rng
@@ -45,7 +46,8 @@ export function drawAssignments(names, exclusions = [], rng = cryptoRandom) {
     if (pos === givers.length) return true;
     const g = givers[pos];
     for (const r of shuffled(people.map((_, k) => k), rng)) {
-      if (taken.has(r) || !allowed(g, r)) continue;
+      // pas de duo mutuel : si r offre déjà à g, g ne peut pas offrir à r
+      if (taken.has(r) || !allowed(g, r) || result.get(r) === g) continue;
       taken.add(r);
       result.set(g, r);
       if (place(pos + 1)) return true;

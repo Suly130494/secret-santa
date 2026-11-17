@@ -15,7 +15,7 @@ const ERROR_MESSAGES = {
   DUPLICATE: 'Deux participants ont le même prénom (majuscules et accents ne comptent pas).',
   TOO_FEW: 'Il faut au moins 3 participants.',
   EMPTY_NAME: "Un participant n'a pas de prénom.",
-  IMPOSSIBLE: "Avec ces exclusions, aucun tirage n'est possible. Retires-en une.",
+  IMPOSSIBLE: "Avec ces exclusions, aucun tirage n'est possible (deux personnes ne peuvent pas non plus se tirer l'une l'autre). Retires-en une.",
   EMPTY_WORD: 'Choisis un mot magique (avec au moins une lettre ou un chiffre).',
   CLUES_MISSING: "Remplis les 3 cases de l'énigme.",
 };
@@ -132,7 +132,7 @@ export function startAdmin({ root, store, baseUrl }) {
   function renderExclusions() {
     const box = slot('exclusions');
     if (state.exclusions.length === 0) {
-      box.replaceChildren(h('p', { class: 'empty' }, 'Aucune exclusion : tout le monde peut tirer tout le monde.'));
+      box.replaceChildren(h('p', { class: 'empty' }, 'Aucune exclusion supplémentaire.'));
       return;
     }
     box.replaceChildren(...state.exclusions.map((pair, index) => h('div', { class: 'exclusion' },
