@@ -101,6 +101,28 @@
 
 .person .field-idea { min-height: 44px; padding: 10px 12px; font-size: 16px; }
 
+.idea-row { display: flex; gap: 8px; align-items: center; }
+.idea-row .field { flex: 1; min-width: 0; }
+.icon-btn-soft { border-color: transparent; font-size: 1.05rem; color: rgba(246, 238, 225, 0.38); }
+.icon-btn-soft:hover { background: rgba(255, 138, 152, 0.08); border-color: transparent; }
+
+.add-idea {
+  justify-self: start;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gold-light);
+  font: 600 0.9rem/1.1 var(--font-ui);
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.add-idea:hover { background: rgba(245, 200, 106, 0.08); border-color: var(--gold); }
+
+.idea-max { font-size: 0.85rem; color: var(--text-faint); }
+
 .exclusions { display: grid; gap: 10px; }
 
 .exclusion {

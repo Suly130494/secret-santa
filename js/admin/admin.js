@@ -7,6 +7,7 @@ import { h, delay, debounce, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
 import { rescueCodesText } from './codes.js';
 import { shortenUrl } from './shorten.js';
+import { MAX_IDEAS, sanitizeIdeas, canAddIdea, canRemoveIdea, incompleteIdeas } from './ideas.js';
 
 const DEFAULT_NAMES = ['Marie', 'Sulyvan', 'Papa', 'Maman', 'Boune'];
 
@@ -20,7 +21,7 @@ const ERROR_MESSAGES = {
 };
 
 const defaultState = () => ({
-  participants: DEFAULT_NAMES.map((name) => ({ name, ideas: ['', '', ''] })),
+  participants: DEFAULT_NAMES.map((name) => ({ name, ideas: sanitizeIdeas() })),
   exclusions: [],
   clues: ['', '', ''],
   magicWord: '',
@@ -35,7 +36,7 @@ function sanitizeDraft(draft) {
   return {
     participants: draft.participants.map((p) => ({
       name: str(p?.name),
-      ideas: [0, 1, 2].map((k) => str(p?.ideas?.[k])),
+      ideas: sanitizeIdeas(p?.ideas),
     })),
     exclusions: (Array.isArray(draft.exclusions) ? draft.exclusions : [])
       .filter((e) => Array.isArray(e))
@@ -85,15 +86,34 @@ export function startAdmin({ root, store, baseUrl }) {
         ),
         person.ideas.map((idea, k) => {
           const id = `p-${index}-idea-${k}`;
-          return [
+          return h('div', { class: 'idea-row' },
             h('label', { class: 'sr-only', for: id }, `Idée ${k + 1} de ${label}`),
             h('input', {
               class: 'field field-idea', id, type: 'text', value: idea, autocomplete: 'off',
               placeholder: `Idée ou thème ${k + 1}`,
               oninput: (e) => { person.ideas[k] = e.target.value; save(); },
             }),
-          ];
+            canRemoveIdea(person.ideas) && h('button', {
+              class: 'icon-btn icon-btn-soft', type: 'button', 'aria-label': `Retirer l'idée ${k + 1} de ${label}`,
+              onclick: () => {
+                person.ideas.splice(k, 1);
+                renderParticipants();
+                saveNow();
+              },
+            }, '×'),
+          );
         }),
+        canAddIdea(person.ideas)
+          ? h('button', {
+            class: 'add-idea', type: 'button',
+            onclick: () => {
+              person.ideas.push('');
+              renderParticipants();
+              saveNow();
+              root.querySelector(`#p-${index}-idea-${person.ideas.length - 1}`)?.focus();
+            },
+          }, '＋ Ajouter une idée')
+          : h('p', { class: 'idea-max' }, `${MAX_IDEAS} idées au maximum`),
       );
     }));
   }
@@ -231,7 +251,7 @@ export function startAdmin({ root, store, baseUrl }) {
     const previous = store.get(ADMIN_LINKS_KEY);
     if (previous?.links?.length && !window.confirm('Relancer le tirage ? Les liens déjà envoyés correspondraient à l’ancien tirage.')) return;
 
-    const missing = state.participants.filter((p) => p.name.trim() && p.ideas.filter((i) => i.trim()).length < 3).map((p) => p.name.trim());
+    const missing = incompleteIdeas(state.participants);
     const exclusions = state.exclusions.filter(([g, r]) => g && r && normalizeWord(g) !== normalizeWord(r));
     const label = slot('generate-label');
     generateBtn.disabled = true;
@@ -332,7 +352,7 @@ export function startAdmin({ root, store, baseUrl }) {
 
   // ---- Ajouts / réinitialisation ----------------------------------------------
   $('#add-participant').addEventListener('click', () => {
-    state.participants.push({ name: '', ideas: ['', '', ''] });
+    state.participants.push({ name: '', ideas: sanitizeIdeas() });
     renderParticipants();
     saveNow();
     root.querySelector(`#p-${state.participants.length - 1}-name`)?.focus();
