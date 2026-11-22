@@ -111,6 +111,32 @@
   gap: 10px;
 }
 
+/* Rébus à 4 cases : grille 2 × 2, cases plus larges que hautes pour les dessins */
+.scratch-row.is-grid { grid-template-columns: repeat(2, 1fr); max-width: 400px; }
+.scratch-row.is-grid .scratch { aspect-ratio: 6 / 5; }
+
+.scratch-face {
+  position: absolute;
+  inset: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.scratch-art { flex: 1; min-height: 0; width: 100%; display: grid; place-items: center; }
+.scratch-art svg { display: block; width: 100%; height: 100%; }
+.scratch-caption {
+  flex: none;
+  max-height: 2.5em;
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-prose);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+}
+
 .scratch {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -419,6 +445,10 @@
   line-height: 1.3;
   animation: screen-in 0.4s var(--ease-out) both;
 }
+
+.clue-zoom.has-art .clue-zoom-card { gap: 6px; padding: 18px 18px 22px; font-size: 1.35rem; }
+.clue-zoom-art { width: 100%; }
+.clue-zoom-art svg { display: block; width: 100%; height: auto; }
 
 .clue-zoom-hint { font-size: 0.85rem; color: var(--text-faint); }
 

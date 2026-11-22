@@ -1,6 +1,7 @@
 import { normalizeWord } from './normalize.js';
 import { drawAssignments, makeRescueCode } from './draw.js';
 import { buildPayload, encodeHash } from './link.js';
+import { CLUE_COUNT, normalizeClue, packClue } from './clues.js';
 
 export class GenerateError extends Error {
   /** @param {'EMPTY_WORD'|'CLUES_MISSING'} code */
@@ -18,8 +19,8 @@ export class GenerateError extends Error {
  */
 export async function generateLinks({ participants, exclusions = [], clues, reward = '', magicWord, baseUrl }) {
   if (!normalizeWord(magicWord)) throw new GenerateError('EMPTY_WORD');
-  const cleanClues = (clues ?? []).map((c) => String(c ?? '').trim());
-  if (cleanClues.length !== 3 || cleanClues.some((c) => c === '')) throw new GenerateError('CLUES_MISSING');
+  const cleanClues = (clues ?? []).map(normalizeClue);
+  if (cleanClues.length !== CLUE_COUNT || cleanClues.some((c) => !c.d && !c.t)) throw new GenerateError('CLUES_MISSING');
 
   const people = participants.map((p) => ({
     name: String(p.name ?? '').trim(),
@@ -39,7 +40,7 @@ export async function generateLinks({ participants, exclusions = [], clues, rewa
     const payload = await buildPayload({
       giver: person.name,
       participants: names,
-      clues: cleanClues,
+      clues: cleanClues.map(packClue),
       reward: String(reward ?? '').trim(),
       target,
       ideas: ideasOf.get(target),

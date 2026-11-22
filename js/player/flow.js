@@ -1,10 +1,11 @@
 /** Logique pure du parcours (sans DOM), testée sous Node. */
+import { CLUE_COUNT } from '../core/clues.js';
 
 /** Remet une progression stockée dans une forme sûre. */
 export function sanitizeProgress(raw) {
   const p = raw && typeof raw === 'object' ? raw : {};
   return {
-    revealed: Array.isArray(p.revealed) ? p.revealed.filter((i) => Number.isInteger(i) && i >= 0 && i < 3) : [],
+    revealed: Array.isArray(p.revealed) ? p.revealed.filter((i) => Number.isInteger(i) && i >= 0 && i < CLUE_COUNT) : [],
     secret: typeof p.secret === 'string' ? p.secret : undefined,
     mode: p.mode === 'magic' || p.mode === 'rescue' ? p.mode : undefined,
     foundAt: typeof p.foundAt === 'string' ? p.foundAt : null,

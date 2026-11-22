@@ -8,6 +8,8 @@ import { copyText } from '../ui/clipboard.js';
 import { rescueCodesText } from './codes.js';
 import { shortenUrl } from './shorten.js';
 import { MAX_IDEAS, sanitizeIdeas, canAddIdea, canRemoveIdea, incompleteIdeas } from './ideas.js';
+import { sanitizeDraftClues } from '../core/clues.js';
+import { DRAWINGS, drawingNode } from '../ui/drawings.js';
 
 const DEFAULT_NAMES = ['Marie', 'Sulyvan', 'Papa', 'Maman', 'Boune'];
 
@@ -17,13 +19,17 @@ const ERROR_MESSAGES = {
   EMPTY_NAME: "Un participant n'a pas de prénom.",
   IMPOSSIBLE: "Avec ces exclusions, aucun tirage n'est possible (deux personnes ne peuvent pas non plus se tirer l'une l'autre). Retires-en une.",
   EMPTY_WORD: 'Choisis un mot magique (avec au moins une lettre ou un chiffre).',
-  CLUES_MISSING: "Remplis les 3 cases de l'énigme.",
+  CLUES_MISSING: "Chaque case de l'énigme a besoin d'un dessin ou d'un texte.",
 };
+
+/** Cases du brouillon, sans identifiant de dessin inconnu de cette version du site. */
+const draftClues = (list) => sanitizeDraftClues(list)
+  .map((c) => (DRAWINGS.some((d) => d.id === c.d) ? c : { ...c, d: '' }));
 
 const defaultState = () => ({
   participants: DEFAULT_NAMES.map((name) => ({ name, ideas: sanitizeIdeas() })),
   exclusions: [],
-  clues: ['', '', ''],
+  clues: draftClues(),
   magicWord: '',
   reward: '',
 });
@@ -41,7 +47,7 @@ function sanitizeDraft(draft) {
     exclusions: (Array.isArray(draft.exclusions) ? draft.exclusions : [])
       .filter((e) => Array.isArray(e))
       .map(([g, r]) => [str(g), str(r)]),
-    clues: [0, 1, 2].map((k) => str(draft.clues?.[k])),
+    clues: draftClues(draft.clues),
     magicWord: str(draft.magicWord),
     reward: str(draft.reward),
   };
@@ -158,12 +164,40 @@ export function startAdmin({ root, store, baseUrl }) {
     }
   }
 
-  function bindRiddle() {
-    root.querySelectorAll('[data-clue]').forEach((area) => {
-      const k = Number(area.dataset.clue);
-      area.value = state.clues[k];
-      area.addEventListener('input', () => { state.clues[k] = area.value; save(); });
+  function renderClues() {
+    const box = slot('clues');
+    box.replaceChildren();
+    state.clues.forEach((clue, k) => {
+      const choices = [{ id: '', label: 'Sans dessin', face: 'Aucun' }]
+        .concat(DRAWINGS.map((d, n) => ({ id: d.id, label: `Dessin ${n + 1}`, face: drawingNode(d.id) })));
+      const buttons = choices.map((c) => h('button', {
+        type: 'button',
+        class: c.id ? 'art-choice' : 'art-choice art-none',
+        'aria-pressed': String(clue.d === c.id),
+        'aria-label': `${c.label} pour la case ${k + 1}`,
+        onclick: () => {
+          clue.d = c.id;
+          buttons.forEach((b, j) => b.setAttribute('aria-pressed', String(choices[j].id === c.id)));
+          saveNow();
+        },
+      }, c.face));
+      const area = h('textarea', {
+        class: 'field',
+        id: `clue-${k}`,
+        rows: 2,
+        placeholder: 'Texte ou légende (facultatif avec un dessin)…',
+        value: clue.t,
+        oninput: (e) => { clue.t = e.target.value; save(); },
+      });
+      box.append(h('fieldset', { class: 'clue-card' },
+        h('legend', { class: 'field-label' }, `Case ${k + 1}`),
+        h('div', { class: 'art-picker' }, buttons),
+        h('label', { class: 'sr-only', for: `clue-${k}` }, `Texte de la case ${k + 1}`),
+        area));
     });
+  }
+
+  function bindRiddle() {
     const word = $('#magic-word');
     word.value = state.magicWord;
     word.addEventListener('input', () => { state.magicWord = word.value; renderMagicPreview(); save(); });
@@ -373,7 +407,6 @@ export function startAdmin({ root, store, baseUrl }) {
   });
 
   function bindValues() {
-    root.querySelectorAll('[data-clue]').forEach((area) => { area.value = state.clues[Number(area.dataset.clue)]; });
     $('#magic-word').value = state.magicWord;
     $('#reward').value = state.reward;
     renderMagicPreview();
@@ -383,6 +416,7 @@ export function startAdmin({ root, store, baseUrl }) {
     renderParticipants();
     renderExclusions();
     renderSealOptions();
+    renderClues();
   }
 
   renderAll();

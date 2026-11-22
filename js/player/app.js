@@ -7,6 +7,8 @@ import { copyText } from '../ui/clipboard.js';
 import { createScratchCard } from './scratch.js';
 import { sanitizeProgress, resumeScreen } from './flow.js';
 import { christmasCountdown } from '../core/countdown.js';
+import { normalizeClue } from '../core/clues.js';
+import { drawingNode } from '../ui/drawings.js';
 
 export const WRONG_WORD_MESSAGES = [
   'Hmm… le sceau ne reconnaît pas cette formule. 🤔',
@@ -14,7 +16,7 @@ export const WRONG_WORD_MESSAGES = [
   'Le sceau a frissonné… mais il tient bon. ❄️',
   "Ce n'est pas le bon mot, mais c'était joliment tenté. ✨",
   'Le Père Noël secoue la tête, désolé. 🎅',
-  'Pas encore ! Relis bien les trois cases. 🔍',
+  'Pas encore ! Regarde bien chaque case. 🔍',
   'Brrr… mauvaise formule, le grimoire reste fermé. 📕',
 ];
 
@@ -114,8 +116,13 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
   }
 
   // ---- Enveloppe scellée -----------------------------------------------------
-  function zoomClue(text) {
-    ref('clue-zoom-text').textContent = text;
+  function zoomClue({ d, t }) {
+    const art = drawingNode(d);
+    ref('clue-zoom-art').replaceChildren(...(art ? [art] : []));
+    ref('clue-zoom-art').hidden = !art;
+    ref('clue-zoom-text').textContent = t;
+    ref('clue-zoom-text').hidden = !t;
+    ref('clue-zoom').classList.toggle('has-art', !!art);
     ref('clue-zoom').hidden = false;
   }
   ref('clue-zoom').addEventListener('click', () => { ref('clue-zoom').hidden = true; });
@@ -130,11 +137,14 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     }
     const row = ref('cards');
     row.replaceChildren();
-    payload.q.forEach((text, i) => {
+    row.classList.toggle('is-grid', payload.q.length === 4);
+    payload.q.forEach((raw, i) => {
+      const clue = normalizeClue(raw);
       const el = h('div', {});
       row.append(el);
       createScratchCard(el, {
-        text,
+        text: clue.t,
+        art: drawingNode(clue.d),
         label: `Case ${i + 1}`,
         revealed: progress.revealed.includes(i),
         onScratch: (level) => sound.scratch(level),
@@ -145,7 +155,7 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
             saveProgress();
           }
         },
-        onOpen: () => zoomClue(text),
+        onOpen: () => zoomClue(clue),
       });
     });
 

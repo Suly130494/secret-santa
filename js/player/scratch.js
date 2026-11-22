@@ -44,8 +44,8 @@ function paintFoil(ctx, w, h_) {
 }
 
 /** Réduit la police jusqu'à ce que le texte tienne dans sa case. */
-function fitText(el) {
-  let size = 17;
+function fitText(el, start = 17) {
+  let size = start;
   el.style.fontSize = `${size}px`;
   while (size > 10 && (el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)) {
     size -= 0.5;
@@ -54,17 +54,21 @@ function fitText(el) {
 }
 
 /**
- * Case à gratter : une feuille d'or en canvas au-dessus d'un texte.
+ * Case à gratter : une feuille d'or en canvas au-dessus d'un texte, d'un dessin, ou d'un dessin légendé.
  * @param {HTMLElement} el
- * @param {{text: string, revealed?: boolean, label?: string, onScratch?: (level: number) => void, onReveal?: () => void, onOpen?: () => void}} opts
+ * @param {{text?: string, art?: SVGElement|null, revealed?: boolean, label?: string, onScratch?: (level: number) => void, onReveal?: () => void, onOpen?: () => void}} opts
  */
-export function createScratchCard(el, { text, revealed = false, label = 'Case à gratter', onScratch, onReveal, onOpen }) {
+export function createScratchCard(el, { text = '', art = null, revealed = false, label = 'Case à gratter', onScratch, onReveal, onOpen }) {
   el.classList.add('scratch');
   el.tabIndex = 0;
   el.setAttribute('role', 'button');
-  const content = h('p', { class: 'scratch-text' }, text);
+  const caption = art && text ? h('p', { class: 'scratch-caption' }, text) : null;
+  const content = art
+    ? h('div', { class: 'scratch-face' }, h('div', { class: 'scratch-art' }, art), caption)
+    : h('p', { class: 'scratch-text' }, text);
   const canvas = h('canvas', { class: 'scratch-foil', 'aria-hidden': 'true' });
   el.replaceChildren(content, canvas);
+  const shown = art ? (text ? `un dessin, avec la légende « ${text} »` : 'un dessin') : text;
 
   let done = false;
   let drawing = false;
@@ -73,9 +77,12 @@ export function createScratchCard(el, { text, revealed = false, label = 'Case à
   let ctx = null;
   let dpr = 1;
 
-  const setLabel = () => el.setAttribute('aria-label', done ? `${label} : ${text}` : `${label}. Gratte-la, ou appuie sur Entrée pour la révéler.`);
+  const setLabel = () => el.setAttribute('aria-label', done ? `${label} : ${shown}` : `${label}. Gratte-la, ou appuie sur Entrée pour la révéler.`);
 
-  const fit = () => fitText(content);
+  const fit = () => {
+    if (!art) fitText(content);
+    else if (caption) fitText(caption, 14);
+  };
   (document.fonts?.ready ?? Promise.resolve()).then(fit);
   requestAnimationFrame(fit);
 

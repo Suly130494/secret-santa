@@ -1,6 +1,7 @@
 import { normalizeWord } from './normalize.js';
 import { encodeJson, decodeJson } from './codec.js';
 import { sealVault, openVault } from './crypto.js';
+import { CLUE_COUNT, isPackedClue } from './clues.js';
 
 export const LINK_PREFIX = 'v1.';
 
@@ -13,7 +14,8 @@ export class InvalidLinkError extends Error {
 
 /**
  * @typedef {{s: string, i: string, c: string}} Vault
- * @typedef {{v: 1, g: string, p: string[], q: string[], r: string, m: Vault, x: Vault}} Payload
+ * @typedef {string | {d: string, t?: string}} PackedClue  case de texte seul, ou dessin (+ légende) — voir clues.js
+ * @typedef {{v: 1, g: string, p: string[], q: PackedClue[], r: string, m: Vault, x: Vault}} Payload
  */
 
 /** Construit le contenu d'un lien personnel. @returns {Promise<Payload>} */
@@ -61,7 +63,7 @@ export function decodeHash(hash) {
     && p.v === 1
     && isStr(p.g) && p.g.trim() !== ''
     && Array.isArray(p.p) && p.p.length >= 3 && p.p.every(isStr) && p.p.includes(p.g)
-    && Array.isArray(p.q) && p.q.length === 3 && p.q.every(isStr)
+    && Array.isArray(p.q) && p.q.length >= 1 && p.q.length <= CLUE_COUNT && p.q.every(isPackedClue)
     && isStr(p.r)
     && isVault(p.m) && isVault(p.x);
   if (!valid) throw new InvalidLinkError('Contenu incomplet');

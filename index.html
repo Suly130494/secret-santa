@@ -74,15 +74,8 @@
 
       <section class="panel" aria-labelledby="h-riddle">
         <h2 class="panel-title" id="h-riddle"><span class="step">3</span> L'énigme</h2>
-        <p class="hint">Chaque case se gratte pour révéler son texte. Ensemble, elles mènent au mot magique.</p>
-        <div class="clues">
-          <label class="field-label" for="clue-0">Case 1</label>
-          <textarea class="field" id="clue-0" data-clue="0" rows="2" placeholder="Premier indice…"></textarea>
-          <label class="field-label" for="clue-1">Case 2</label>
-          <textarea class="field" id="clue-1" data-clue="1" rows="2" placeholder="Deuxième indice…"></textarea>
-          <label class="field-label" for="clue-2">Case 3</label>
-          <textarea class="field" id="clue-2" data-clue="2" rows="2" placeholder="Troisième indice…"></textarea>
-        </div>
+        <p class="hint">Chaque case se gratte pour révéler un dessin, un texte, ou les deux. Ensemble, elles mènent au mot magique.</p>
+        <div class="clues" data-slot="clues"></div>
         <label class="field-label" for="magic-word">Mot magique (la réponse)</label>
         <div class="secret-field">
           <input class="field" id="magic-word" type="password" autocomplete="new-password" spellcheck="false" placeholder="ex. Flocon d'hiver">
@@ -163,7 +156,7 @@
           <h1 class="title title-sm">L'enveloppe de <span data-ref="sealed-name"></span></h1>
         </header>
         <div class="envelope-anchor" data-ref="envelope-anchor" aria-hidden="true"></div>
-        <p class="prose prose-sm">Gratte les trois cases : l'énigme mène au mot magique qui brise le sceau.</p>
+        <p class="prose prose-sm">Gratte toutes les cases : l'énigme mène au mot magique qui brise le sceau.</p>
         <div class="scratch-row" data-ref="cards"></div>
         <p class="reward-line" data-ref="reward-line" hidden>🏆 Le premier à trouver gagne : <strong data-ref="reward-text"></strong></p>
         <form class="spell" data-ref="spell-form" autocomplete="off" novalidate>
@@ -240,7 +233,7 @@
       </div>
 
       <div class="clue-zoom" data-ref="clue-zoom" hidden>
-        <div class="clue-zoom-card"><p data-ref="clue-zoom-text"></p></div>
+        <div class="clue-zoom-card"><div class="clue-zoom-art" data-ref="clue-zoom-art" hidden></div><p data-ref="clue-zoom-text"></p></div>
         <p class="clue-zoom-hint">Touche pour fermer</p>
       </div>
 
