@@ -1,7 +1,7 @@
 import { unlockPayload, linkId } from '../core/link.js';
 import { progressKey } from '../core/storage.js';
 import { proofSeal } from '../core/proof.js';
-import { formatFoundAt, buildShareMessage, whatsappUrl } from '../core/share.js';
+import { formatFoundAt, buildShareMessage, whatsappUrl, rewardPhrase } from '../core/share.js';
 import { h, delay, mountTemplate } from '../ui/dom.js';
 import { copyText } from '../ui/clipboard.js';
 import { createScratchCard } from './scratch.js';
@@ -133,7 +133,7 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     scene.showEnvelope(ref('envelope-anchor'));
     if (payload.r) {
       ref('reward-line').hidden = false;
-      ref('reward-text').textContent = payload.r;
+      ref('reward-text').textContent = rewardPhrase(payload.r);
     }
     const row = ref('cards');
     row.replaceChildren();
@@ -212,7 +212,7 @@ export async function startPlayer({ root, payload, hash, scene, sound, store, no
     ref('found-at').textContent = formatFoundAt(new Date(progress.foundAt));
     if (payload.r) {
       ref('victory-reward').hidden = false;
-      ref('victory-reward-text').textContent = payload.r;
+      ref('victory-reward-text').textContent = rewardPhrase(payload.r);
     }
     renderShare(ref('victory-share'));
     ref('open-envelope').onclick = () => showReady();
